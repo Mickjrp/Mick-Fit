@@ -291,11 +291,11 @@ function openBlueprint(id) {
     apply = `<button type="button" class="btn" data-act="bp-apply" data-bp="${esc(id)}">${on ? "ย้อนกลับไปใช้ตามที่บันทึกไว้" : "ใช้โปรแกรมนี้"}</button>${dirty ? '<p class="hint">ตารางปัจจุบันมีการแก้ไขที่ยังไม่บันทึก ถ้าเปลี่ยนตอนนี้การแก้ไขจะหายไป (กดเลิกทำได้)</p>' : ""}`;
   const h = `<ul class="daylist">${days}</ul>
     <div class="btns">${apply}
-      <button type="button" class="btn ghost" data-act="bp-overwrite" data-bp="${esc(id)}">บันทึกตารางปัจจุบันทับ blueprint นี้</button></div>
+      <button type="button" class="btn ghost" data-act="bp-overwrite" data-bp="${esc(id)}">บันทึกตารางปัจจุบันทับเทมเพลตนี้</button></div>
     <label class="fld">ชื่อ<input id="bp-name" autocomplete="off" maxlength="60" value="${esc(b.name)}"></label>
     <p class="err" id="bp-err" hidden></p>
     <div class="btns"><button type="button" class="btn ghost" data-act="bp-rename" data-bp="${esc(id)}">เปลี่ยนชื่อ</button>
-      <button type="button" class="btn danger" data-act="bp-delete" data-bp="${esc(id)}">ลบ blueprint นี้</button></div>`;
+      <button type="button" class="btn danger" data-act="bp-delete" data-bp="${esc(id)}">ลบเทมเพลตนี้</button></div>`;
   openSheet(b.name, h);
 }
 function bpNameFrom(sel, exceptId) {
@@ -360,11 +360,11 @@ function overwriteBlueprint(id) {
   });
 }
 function openNewBlueprint() {
-  const h = `<label class="fld">ชื่อ blueprint<input id="bp-new-name" autocomplete="off" maxlength="60" placeholder="เช่น Phase 2 · Strength"></label>
+  const h = `<label class="fld">ชื่อเทมเพลต<input id="bp-new-name" autocomplete="off" maxlength="60" placeholder="เช่น Phase 2 · Strength"></label>
     <p class="hint">เก็บตารางทั้ง 7 วันตอนนี้ไว้ (หมวด ท่า sets/reps ลิงก์) แล้วตารางปัจจุบันจะใช้ชื่อนี้</p>
     <p class="err" id="bp-err" hidden></p>
     <div class="btns"><button type="button" class="btn" data-act="bp-create">บันทึก</button></div>`;
-  openSheet("บันทึกเป็น blueprint ใหม่", h);
+  openSheet("บันทึกเป็นเทมเพลตใหม่", h);
 }
 function createBlueprint() {
   const name = bpNameFrom("#bp-new-name", null);

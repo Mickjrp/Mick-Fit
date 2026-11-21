@@ -42,7 +42,7 @@ const trainDays = (p) => ORDER.filter((dk) => !p.days[dk].rest).length;
 function blueprintCard() {
   const cur = bpById(program.bpId),
     dirty = programDirty();
-  let h = `<section class="card"><h2 class="ch">โปรแกรม</h2><div class="bp-cur"><span class="k">ใช้อยู่</span><b>${esc(program.title || "—")}</b>${!cur ? '<span class="tag warn">ยังไม่ได้บันทึกเป็น blueprint</span>' : dirty ? '<span class="tag warn">มีการแก้ไขที่ยังไม่บันทึก</span>' : ""}</div>`;
+  let h = `<section class="card"><h2 class="ch">โปรแกรม</h2><div class="bp-cur"><span class="k">ใช้อยู่</span><b>${esc(program.title || "—")}</b>${!cur ? '<span class="tag warn">ยังไม่ได้บันทึกเป็นเทมเพลต</span>' : dirty ? '<span class="tag warn">มีการแก้ไขที่ยังไม่บันทึก</span>' : ""}</div>`;
   if (dirty && cur)
     h += `<button type="button" class="btn ghost" data-act="bp-overwrite" data-bp="${esc(cur.id)}">บันทึกการแก้ไขลงใน “${esc(cur.name)}”</button>`;
   h += `<ul class="picklist">${blueprints
@@ -51,7 +51,7 @@ function blueprintCard() {
       return `<li><button type="button" data-bpopen="${esc(b.id)}"><span>${esc(b.name)}${on ? '<span class="cur">ใช้อยู่</span>' : ""}</span><small>${trainDays(b.program)} วันซ้อม · บันทึก ${esc(thDate(isoLocal(new Date(b.savedAt))))}</small></button></li>`;
     })
     .join("")}</ul>`;
-  h += `<button type="button" class="btn" data-act="bp-new">บันทึกตารางปัจจุบันเป็น blueprint ใหม่</button>`;
-  h += `<p class="hint">Blueprint คือตาราง 7 วันที่เก็บไว้ใช้ซ้ำ เปลี่ยนไปใช้อันไหนก็ได้ บันทึกการซ้อมไม่หาย</p></section>`;
+  h += `<button type="button" class="btn" data-act="bp-new">บันทึกตารางปัจจุบันเป็นเทมเพลตใหม่</button>`;
+  h += `<p class="hint">เทมเพลตคือตาราง 7 วันที่เก็บไว้ใช้ซ้ำ เปลี่ยนไปใช้อันไหนก็ได้ บันทึกการซ้อมไม่หาย</p></section>`;
   return h;
 }

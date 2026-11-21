@@ -10,6 +10,7 @@ const K = {
   timer: "gtl.timer.v1",
   seed: "gtl.seeded.v1",
   bp: "gtl.blueprints.v1",
+  p1: "gtl.phase1-reset.v1",
 };
 let storageOK = true;
 function lsGet(k) {
@@ -139,6 +140,19 @@ let blueprints = lsGet(K.bp);
 if (!Array.isArray(blueprints)) {
   blueprints = [makeBlueprint(PHASE1.id, PHASE1.title, normalizeProgram(defaultProgram()))];
   lsSet(K.bp, blueprints);
+}
+/* Mick Fit v2.1: Phase 1 · Build Capacity replaces the old program and old templates (once per device).
+   A copy of what was there before is kept in gtl.pre-phase1.v1, just in case.
+   Exercises from the old program stay in the library so past logs keep their names. */
+if (!lsGet(K.p1)) {
+  if (lsGet(K.prog)) lsSet("gtl.pre-phase1.v1", { at: new Date().toISOString(), program, blueprints });
+  const fresh = defaultProgram();
+  fresh.ex = Object.assign({}, program.ex, fresh.ex);
+  program = normalizeProgram(fresh);
+  blueprints = [makeBlueprint(PHASE1.id, PHASE1.title, program)];
+  lsSet(K.prog, program);
+  lsSet(K.bp, blueprints);
+  lsSet(K.p1, true);
 }
 const saveBlueprints = () => lsSet(K.bp, blueprints);
 const bpById = (id) => blueprints.find((b) => b.id === id);
