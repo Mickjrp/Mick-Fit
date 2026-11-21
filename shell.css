@@ -16,7 +16,10 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{height:100%;margin:0;overflow:hidden}
+/* no overflow:hidden on html/body: on the iPhone home-screen app it clips drawing at the height iOS
+   reports (screen minus status bar), which cut the tab bar off. #app is fixed, so nothing scrolls anyway. */
+html,body{height:100%;margin:0;overscroll-behavior:none}
+html{background:var(--bg)}
 body{background:var(--bg);color:var(--text);font:400 15px/1.5 var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}

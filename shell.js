@@ -1,6 +1,6 @@
 /* shell.js — Mick Fit: 5-tab navigation over the two apps, shared data, one Backup / Restore. */
 'use strict';
-const VERSION = '2.3.0';
+const VERSION = '2.3.1';
 
 /* ---------- storage keys (both apps share this origin's localStorage) ---------- */
 const MEAL_KEY = 'mick-mealprep-v1';               // meal app: { settings, over, preps, pantry, days, body }
@@ -161,7 +161,7 @@ function renderData() {
   <section class="card"><h2>ติดตั้งบน iPhone</h2>
     ${standalone ? '<p class="hint">เปิดเป็นแอปบน Home Screen อยู่แล้ว</p>' : '<ol class="steps"><li>เปิดหน้านี้ใน Safari</li><li>แตะปุ่ม Share</li><li>เลือก Add to Home Screen แล้วกด Add</li></ol>'}
   </section>
-  <p class="hint" style="text-align:center">Mick Fit · v${VERSION}</p>`;
+  <p class="hint" style="text-align:center">Mick Fit · v${VERSION} · จอ ${innerWidth}×${innerHeight} / ${screen.width}×${screen.height}</p>`;
 }
 async function saveFile(name, text, mime) {
   const blob = new Blob([text], { type: mime });
