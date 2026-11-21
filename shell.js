@@ -1,6 +1,6 @@
 /* shell.js — Mick Fit: 5-tab navigation over the two apps, shared data, one Backup / Restore. */
 'use strict';
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 
 /* ---------- storage keys (both apps share this origin's localStorage) ---------- */
 const MEAL_KEY = 'mick-mealprep-v1';               // meal app: { settings, over, preps, pantry, days, body }
@@ -257,6 +257,16 @@ function toast(msg) {
 }
 
 /* ---------- boot ---------- */
+// Home-screen app on iPhone: use the real screen height (see #app in shell.css)
+function fitHeight() {
+  const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+  const portrait = innerHeight >= innerWidth;
+  const h = standalone && portrait ? Math.max(innerHeight, screen.height) : innerHeight;
+  document.documentElement.style.setProperty('--app-h', h + 'px');
+}
+fitHeight();
+addEventListener('resize', fitHeight);
+addEventListener('orientationchange', () => setTimeout(fitHeight, 300));
 migrateOnce();
 applyTheme();
 loadFrames();

@@ -86,9 +86,11 @@
   --h3: #f2714d;
   color-scheme: dark;
 }
-/* base */
+/* base
+   Safe areas (Dynamic Island, home indicator) are handled by the Mick Fit shell around this frame.
+   iOS still passes them into the frame, so top/bottom insets are 0px here on purpose. */
 :root {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: 0px;
 }
 [hidden] {
   display: none !important;
@@ -110,8 +112,8 @@ img {
 html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 130px);
-  scroll-padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 110px);
+  scroll-padding-top: calc(0px + 130px);
+  scroll-padding-bottom: calc(var(--nav-h) + 0px + 110px);
 }
 body {
   margin: 0;
@@ -120,16 +122,16 @@ body {
   font-family: var(--text);
   font-size: 15px;
   line-height: 1.5;
-  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 28px);
+  padding-bottom: calc(var(--nav-h) + 0px + 28px);
 }
 body.has-timer {
-  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 118px);
+  padding-bottom: calc(var(--nav-h) + 0px + 118px);
 }
 body::before {
   content: "";
   position: fixed;
   inset: 0 0 auto;
-  height: env(safe-area-inset-top, 0px);
+  height: 0px;
   z-index: 30;
   background: var(--hdr);
 }
@@ -186,7 +188,7 @@ a {
 /* header */
 .top {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0px;
   z-index: 20;
   background: var(--hdr);
   color: var(--on-hdr);
@@ -1355,7 +1357,7 @@ details.rules li small {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--nav-h) + 0px);
   z-index: 25;
   padding-bottom: 8px;
   pointer-events: none;
@@ -1456,7 +1458,7 @@ details.rules li small {
   z-index: 26;
   background: var(--surface);
   border-top: 1px solid var(--line);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0px;
 }
 .tabbar .col {
   display: grid;
@@ -1537,7 +1539,7 @@ details.rules li small {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 14px max(16px, env(safe-area-inset-right, 0px))
-    calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    calc(20px + 0px) max(16px, env(safe-area-inset-left, 0px));
   display: grid;
   gap: 14px;
   align-content: start;
@@ -1606,7 +1608,7 @@ details.rules li small {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+  bottom: calc(var(--nav-h) + 0px + 12px);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -1620,7 +1622,7 @@ details.rules li small {
   border: 1px solid var(--hdr-line);
 }
 body.has-timer .toast {
-  bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 104px);
+  bottom: calc(var(--nav-h) + 0px + 104px);
 }
 .toast button {
   color: var(--yellow);
