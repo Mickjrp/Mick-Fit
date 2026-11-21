@@ -1,4 +1,4 @@
-# Mick Fit (PWA) · v2.1
+# Mick Fit (PWA) · v2.2
 
 ## แท็บ
 

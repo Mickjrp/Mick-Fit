@@ -2,7 +2,7 @@
 <html lang="th" data-mode="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1417" id="meta-theme">
 <title>Mick Meal Prep</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,6 +31,7 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
+html,body{max-width:100%;overflow-x:clip}
 body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.5 var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 body.locked{overflow:hidden}
 h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
@@ -688,9 +689,26 @@ function useLocal(msg) {
   let data = null;
   try { data = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {}
   applyAll(data || SAMPLE());
+  clearOldPlanOnce();
   UI.loaded = true;
   $('#banner').innerHTML = msg ? `<div class="banner">${esc(msg)}</div>` : '';
   render();
+}
+/* Mick Fit v2.2: start the meal plan empty, once per device (Mick will plan it himself).
+   Removes the recipe on each default meal slot, and every planned meal from today on that isn't ticked
+   as eaten. Past days, meals already eaten, water, Meal Prep boxes, pantry and recipes are kept. */
+function clearOldPlanOnce() {
+  if (S.settings.planClearedV1) return;
+  (S.settings.slots || []).forEach(sl => { sl.recipeId = ''; });
+  const t = todayKey();
+  Object.keys(S.days).forEach(k => {
+    if (k < t) return;
+    const d = S.days[k];
+    d.entries = (d.entries || []).filter(e => e.done);
+    if (!d.entries.length && !num(d.water) && !d.mode) delete S.days[k];
+  });
+  S.settings.planClearedV1 = t;
+  saveLocal();
 }
 function applyAll(d) {
   S.settings = { ...clone(DEFAULT_SETTINGS), ...(d.settings || {}) };
