@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="th" data-mode="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1417" id="meta-theme">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mick Fit">
+<title>Mick Fit</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  // apply the saved theme (meal settings) before the page paints
+  try { if ((JSON.parse(localStorage.getItem('mick-mealprep-v1') || '{}').settings || {}).theme === 'light') document.documentElement.dataset.mode = 'light'; } catch (e) {}
+</script>
+<link rel="stylesheet" href="shell.css">
+</head>
+<body>
+<!--
+  Mick Fit shell: owns the 5-tab bar and loads the two apps in iframes.
+    train/  = Weekly Training (workout log, program, body weight, training settings)
+    meal/   = Meal Prep (food log, meal plan, recipes, pantry, food settings)
+  Both run on the same origin, so they share one localStorage. Each app switches view from its #hash.
+-->
+<div id="app">
+  <div id="seg-bar" hidden><div class="seg" id="seg" role="group" aria-label="มุมมอง"></div></div>
+  <div id="stage">
+    <iframe id="f-train" title="ซ้อม" allow="screen-wake-lock; web-share; autoplay"></iframe>
+    <iframe id="f-meal" title="อาหาร" allow="web-share; clipboard-write"></iframe>
+    <section id="p-data" class="panel" hidden aria-label="ข้อมูล"></section>
+  </div>
+  <nav id="tabs" aria-label="เมนูหลัก"><div class="inner" id="tab-row"></div></nav>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="shell.js"></script>
+</body>
+</html>

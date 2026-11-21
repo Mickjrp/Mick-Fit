@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Weekly Training App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+    <script>
+      // Theme comes from the meal app's setting (ฉัน › ตั้งค่าอาหาร › ธีม) so the whole app matches.
+      // Applied before the page paints (no white flash).
+      (function () {
+        try {
+          const m = JSON.parse(localStorage.getItem("mick-mealprep-v1") || "{}");
+          document.documentElement.dataset.theme =
+            m.settings && m.settings.theme === "light" ? "light" : "dark";
+        } catch (e) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <header class="top gut">
+      <div class="col">
+        <div class="top-row">
+          <div class="brand"><b>Weekly Training</b><span>Hypertrophy + Athletic</span></div>
+          <button type="button" class="tbtn" id="timer-open" aria-label="Rest timer">
+            <svg class="ico" viewBox="0 0 24 24">
+              <circle cx="12" cy="13" r="8" />
+              <path d="M12 9v4l2.5 2M9 2h6" /></svg
+            ><span>Timer</span>
+          </button>
+        </div>
+        <div class="days" id="days" role="group" aria-label="Training day"></div>
+      </div>
+    </header>
+
+    <main class="gut">
+      <div class="col">
+        <div class="banner" id="banner" hidden></div>
+        <section class="view" id="v-workout"></section>
+        <section class="view" id="v-body" hidden></section>
+        <section class="view" id="v-week" hidden></section>
+        <section class="view" id="v-settings" hidden></section>
+      </div>
+    </main>
+
+    <div class="timer gut" id="timer" hidden>
+      <div class="col">
+        <div class="tcard" id="tcard" role="timer" aria-live="off">
+          <div class="tinfo">
+            <span class="ttime" id="t-time">0:00</span><span class="tlabel" id="t-label">พัก</span>
+          </div>
+          <div class="tbtns">
+            <button type="button" data-t="-15" aria-label="ลด 15 วินาที">−15</button
+            ><button type="button" data-t="15" aria-label="เพิ่ม 15 วินาที">+15</button
+            ><button type="button" data-t="stop" id="t-stop">ข้าม</button>
+          </div>
+          <div class="tbar"><i id="t-prog"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab bar lives in the Mick Fit shell (../index.html); views switch via #workout #body #week #settings -->
+
+    <div class="sheet-wrap" id="sheet" hidden>
+      <div class="sheet-back" data-close></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <div class="sheet-head">
+          <h2 id="sheet-title"></h2>
+          <button type="button" data-close>ปิด</button>
+        </div>
+        <div class="sheet-body" id="sheet-body"></div>
+      </div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+
+    <!-- Scripts share one global scope and must load in this order -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/exercise.js"></script>
+    <script src="js/muscle-map.js"></script>
+    <script src="js/timer.js"></script>
+    <script src="js/views/workout.js"></script>
+    <script src="js/views/sheets.js"></script>
+    <script src="js/views/body.js"></script>
+    <script src="js/views/week.js"></script>
+    <script src="js/views/settings.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
