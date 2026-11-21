@@ -128,7 +128,10 @@ button.pill{cursor:pointer}
 .bottle .marks i{display:block;height:1px;width:18px;margin-left:auto;background:color-mix(in srgb,var(--text) 22%,transparent)}
 .wnum{font:700 32px/1 var(--f-display);font-variant-numeric:tabular-nums}
 .wnum small{font-size:14px;color:var(--muted);font-weight:500}
-.wbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.wbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wbtns .wbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1.25;padding:6px 4px}
+.w-custom{display:flex;gap:8px}
+.w-custom input{flex:1;min-width:0}
 .wbtn{border:1px solid color-mix(in srgb,var(--water) 40%,var(--line));background:color-mix(in srgb,var(--water) 10%,transparent);color:var(--text);border-radius:12px;min-height:44px;font-weight:600}
 .wcustom{display:flex;gap:8px;margin-top:8px}
 .wcustom input{flex:1;min-width:0}
@@ -357,8 +360,8 @@ const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="c
 
 /* ---------- state ---------- */
 const DEFAULT_SETTINGS = {
-  kcal: 2800, protein: 120, carbs: 380, fat: 80, water: 3000, cup: 250, bottle: 600, theme: 'dark',
-  rest: { kcal: 2500, protein: 120, carbs: 305, fat: 75 }, trainDays: [0, 1, 2, 3, 5],
+  kcal: 2500, protein: 110, carbs: 345, fat: 75, water: 2500, cup: 250, bottle: 600, jug: 1000, theme: 'dark',
+  rest: { kcal: 2500, protein: 110, carbs: 345, fat: 75 }, trainDays: [0, 1, 2, 3, 5],
   goalKg: 60, gainRate: 0.25, favs: [], quick: [], filter: { minP: 0, maxKcal: 0, exclude: '', lowVeg: false },
   slots: [{ id: 's1', name: 'มื้อเช้า', recipeId: '' }, { id: 's2', name: 'มื้อกลางวัน', recipeId: '' }, { id: 's3', name: 'มื้อเย็น', recipeId: '' }]
 };
@@ -691,6 +694,7 @@ function useLocal(msg) {
   try { data = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) {}
   applyAll(data || SAMPLE());
   clearOldPlanOnce();
+  applyTargetsOnce();
   UI.loaded = true;
   $('#banner').innerHTML = msg ? `<div class="banner">${esc(msg)}</div>` : '';
   render();
@@ -709,6 +713,16 @@ function clearOldPlanOnce() {
     if (!d.entries.length && !num(d.water) && !d.mode) delete S.days[k];
   });
   S.settings.planClearedV1 = t;
+  saveLocal();
+}
+/* Mick Fit v2.4: targets agreed Nov 2026 (52 kg, 168 cm, uses ~2,000 kcal/day): 2,500 kcal every day,
+   P 110 / C 345 / F 75 g, water 2,500 ml. Written once over the saved settings; editable afterwards. */
+function applyTargetsOnce() {
+  const st = S.settings;
+  if (st.targetsV2) return;
+  Object.assign(st, { kcal: 2500, protein: 110, carbs: 345, fat: 75, water: 2500, goalKg: 60, gainRate: 0.25 });
+  st.rest = { kcal: 2500, protein: 110, carbs: 345, fat: 75 };
+  st.targetsV2 = todayKey();
   saveLocal();
 }
 function applyAll(d) {
@@ -841,13 +855,15 @@ function viewToday() {
       <div>
         <div class="wnum">${fmt(day.water || 0)}<small> / ${fmt(wt)} ml</small></div>
         <div class="muted sm">${Math.round(wp)}% · ดื่มไป ${(day.waterLog || []).length} ครั้ง</div>
-        <div class="wbtns">
-          <button class="wbtn" data-act="water-add" data-ml="${num(st.cup) || 250}">+${fmt(st.cup || 250)} ml <small>แก้ว</small></button>
-          <button class="wbtn" data-act="water-add" data-ml="${num(st.bottle) || 600}">+${fmt(st.bottle || 600)} ml <small>ขวด</small></button>
-        </div>
         ${(day.waterLog || []).length ? '<button class="btn ghost sm" data-act="water-undo" style="margin-top:8px">ย้อนกลับครั้งล่าสุด</button>' : ''}
       </div>
     </div>
+    <div class="wbtns">
+      <button class="wbtn" data-act="water-add" data-ml="${num(st.cup) || 250}">+${fmt(st.cup || 250)} ml <small>แก้ว</small></button>
+      <button class="wbtn" data-act="water-add" data-ml="${num(st.bottle) || 600}">+${fmt(st.bottle || 600)} ml <small>ขวด</small></button>
+      <button class="wbtn" data-act="water-add" data-ml="${num(st.jug) || 1000}">+${fmt(st.jug || 1000)} ml <small>ขวดใหญ่</small></button>
+    </div>
+    <div class="w-custom"><input id="water-ml" type="number" inputmode="numeric" min="1" max="3000" step="1" placeholder="พิมพ์เอง (ml)" aria-label="ปริมาณน้ำที่ดื่ม (ml)"><button class="btn sm" data-act="water-custom">+ เพิ่ม</button></div>
   </section>
   ${weightCard()}
   ${onboardCard()}`;
@@ -1063,7 +1079,7 @@ function viewConfig() {
     <p class="hint" style="margin:0">ช่วงเพิ่มกล้าม อัตราที่นิยมคือประมาณ 0.25–0.5 kg ต่อสัปดาห์</p>
   </section>
   <section class="card"><h2>น้ำดื่ม</h2>
-    <div class="grid2">${cf('เป้าต่อวัน', 'water', 'ml')}${cf('แก้ว', 'cup', 'ml')}${cf('ขวด', 'bottle', 'ml')}</div>
+    <div class="grid2">${cf('เป้าต่อวัน', 'water', 'ml')}${cf('แก้ว', 'cup', 'ml')}${cf('ขวด', 'bottle', 'ml')}${cf('ขวดใหญ่', 'jug', 'ml')}</div>
   </section>
   <section class="card"><h2>ของกินด่วน</h2>
     ${(st.quick || []).length ? `<div>${st.quick.map((x, i) => `<div class="stock-row"><span>${esc(x.name)} <span class="muted sm num">${fmt(x.kcal)} kcal · P ${fmt(x.protein)}g</span></span><button class="icon-btn" data-act="quick-del" data-i="${i}" aria-label="ลบ ${esc(x.name)}">×</button></div>`).join('')}</div>` : '<p class="hint" style="margin:0">ยังไม่มี เพิ่มได้ตอนเพิ่มมื้อแบบกำหนดเอง แล้วติ๊ก “บันทึกเป็นของกินด่วน”</p>'}
@@ -1430,6 +1446,7 @@ const A = {
   'quick-del': el => { S.settings.quick.splice(+el.dataset.i, 1); save('settings'); render(); },
   'entry-del': () => ask('ลบมื้อนี้ออกจากวันนี้?', () => { sheet.onDelete(sheet.draft); closeSheet(); }),
   'water-add': el => { const day = ensureDay(UI.sel), ml = num(el.dataset.ml); day.water = num(day.water) + ml; (day.waterLog = day.waterLog || []).push(ml); save('day:' + UI.sel); render(); },
+  'water-custom': () => { const inp = $('#water-ml'), ml = Math.round(num(inp && inp.value)); if (ml < 1 || ml > 3000) { toast('ใส่ปริมาณน้ำ 1–3,000 ml'); return; } A['water-add']({ dataset: { ml } }); toast(`เพิ่มน้ำ ${fmt(ml)} ml แล้ว`); },
   'water-undo': () => { const day = ensureDay(UI.sel); const ml = (day.waterLog || []).pop(); if (ml == null) return; day.water = Math.max(0, num(day.water) - ml); save('day:' + UI.sel); render(); },
   'open-recipe': el => openRecipe(el.dataset.id),
   cat: el => { UI.cat = el.dataset.cat; render(); },
@@ -1520,7 +1537,7 @@ document.addEventListener('change', e => {
   if (e.target.id === 'img-file' && e.target.files[0]) { uploadRecipeImage(e.target.files[0]); return; }
   if (e.target.id === 'import-file' && e.target.files[0]) { const r = new FileReader(); r.onload = () => { $('#import-box').value = r.result; }; r.readAsText(e.target.files[0]); }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#viewer').hidden) A['viewer-close'](); else if (!$('#confirm').hidden) A['confirm-no'](); else if (sheet) closeSheet(); } if (e.key === 'Enter' && e.target.id === 'weight-kg') A['weight-save'](); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#viewer').hidden) A['viewer-close'](); else if (!$('#confirm').hidden) A['confirm-no'](); else if (sheet) closeSheet(); } if (e.key === 'Enter' && e.target.id === 'weight-kg') A['weight-save'](); if (e.key === 'Enter' && e.target.id === 'water-ml') A['water-custom'](); });
 const fromHash = () => { let h = location.hash.slice(1); if (h === 'prep') { h = 'plan'; UI.planSeg = 'prep'; } if (TABS.some(t => t[0] === h)) UI.tab = h; };
 window.addEventListener('hashchange', () => { fromHash(); if (!sheet) render(); });
 // Training screens change the program (train/rest days) and body weight; "storage" fires here when they do.

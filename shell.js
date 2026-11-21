@@ -1,6 +1,6 @@
 /* shell.js — Mick Fit: 5-tab navigation over the two apps, shared data, one Backup / Restore. */
 'use strict';
-const VERSION = '2.3.2';
+const VERSION = '2.4.0';
 
 /* ---------- storage keys (both apps share this origin's localStorage) ---------- */
 const MEAL_KEY = 'mick-mealprep-v1';               // meal app: { settings, over, preps, pantry, days, body }
