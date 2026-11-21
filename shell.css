@@ -16,18 +16,17 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-/* no overflow:hidden on html/body: on the iPhone home-screen app it clips drawing at the height iOS
-   reports (screen minus status bar), which cut the tab bar off. #app is fixed, so nothing scrolls anyway. */
-html,body{height:100%;margin:0;overscroll-behavior:none}
-html{background:var(--bg)}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+/* iPhone home-screen app bug: iOS lets the page draw only on screen height minus the status bar
+   (393×793 of 393×852 on a 14 Pro). The strip below can't be drawn on; it shows the page background,
+   so that background is the tab bar colour and the strip reads as part of the tab bar. */
+html{background:var(--surface)}
 body{background:var(--bg);color:var(--text);font:400 15px/1.5 var(--f-body);-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
 
 /* one fixed column: status-bar gap · segment bar · app frame · tab bar */
-/* --app-h is set by shell.js: on the iPhone home-screen app iOS reports the page shorter than the
-   screen by the status-bar height, which left an empty band under the tab bar */
-#app{position:fixed;top:0;left:0;right:0;height:var(--app-h,100%);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);background:var(--bg)}
 #stage{position:relative;flex:1;min-height:0}
 /* iOS sizes an iframe to its content: width:1px + min-width:100% pins it to the screen width */
 #stage iframe{position:absolute;top:0;left:0;width:1px;min-width:100%;height:100%;border:0;background:var(--bg)}
@@ -39,6 +38,8 @@ button{cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--text);box-shadow:0 1px 0 var(--line)}
 
 #tabs{background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+/* short page (bug above): the strip under the page already clears the home indicator */
+html.short-vp #tabs{padding-bottom:4px}
 #tabs .inner{width:100%;max-width:560px;display:grid;grid-template-columns:repeat(5,1fr)}
 .tab{border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font:500 11px var(--f-body);padding:6px 0;border-radius:12px;position:relative}
 .tab[aria-current="page"]{color:var(--accent)}

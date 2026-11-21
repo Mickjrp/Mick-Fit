@@ -1,6 +1,6 @@
 /* shell.js — Mick Fit: 5-tab navigation over the two apps, shared data, one Backup / Restore. */
 'use strict';
-const VERSION = '2.3.1';
+const VERSION = '2.3.2';
 
 /* ---------- storage keys (both apps share this origin's localStorage) ---------- */
 const MEAL_KEY = 'mick-mealprep-v1';               // meal app: { settings, over, preps, pantry, days, body }
@@ -257,12 +257,12 @@ function toast(msg) {
 }
 
 /* ---------- boot ---------- */
-// Home-screen app on iPhone: use the real screen height (see #app in shell.css)
+// iPhone home-screen app: when iOS gives the page less than the screen height (see html in shell.css),
+// drop the tab bar's home-indicator padding: the strip below the page already provides that space.
 function fitHeight() {
   const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
   const portrait = innerHeight >= innerWidth;
-  const h = standalone && portrait ? Math.max(innerHeight, screen.height) : innerHeight;
-  document.documentElement.style.setProperty('--app-h', h + 'px');
+  document.documentElement.classList.toggle('short-vp', standalone && portrait && screen.height - innerHeight > 30);
 }
 fitHeight();
 addEventListener('resize', fitHeight);
