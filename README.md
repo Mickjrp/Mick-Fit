@@ -1,11 +1,11 @@
-# Mick Fit (PWA) · v2.4
+# Mick Fit (PWA) · v2.5
 
 ## แท็บ
 
 | แท็บ | ปุ่มด้านบน | มาจาก |
 |---|---|---|
 | วันนี้ | ซ้อม · อาหาร | `train/#workout` · `meal/#today` |
-| แผน | ตารางซ้อม · แผนอาหาร | `train/#week` · `meal/#plan` |
+| แผน | ตารางซ้อม · แผนอาหาร · สรุป | `train/#week` · `meal/#plan` · `meal/#summary` |
 | เมนู | – | `meal/#menu` |
 | คลัง | – | `meal/#stock` |
 | ฉัน | น้ำหนัก · ตั้งค่าซ้อม · ตั้งค่าอาหาร · ข้อมูล | `train/#body` · `train/#settings` · `meal/#config` · หน้า Backup ของ shell |

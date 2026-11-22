@@ -2,7 +2,7 @@
 // 1) Bump CACHE (and VERSION in shell.js) every time you upload changes.
 // 2) If you add a new file, add it to ASSETS too. Recipe photos (meal/img, meal/page) are cached
 //    the first time they are viewed, so they are not listed here.
-const CACHE = "mickfit-v2.4.0";
+const CACHE = "mickfit-v2.5.0";
 const ASSETS = [
   "./",
   "./index.html",

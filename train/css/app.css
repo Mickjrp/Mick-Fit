@@ -1324,6 +1324,39 @@ td.zero {
   padding: 10px 2px;
   text-align: left;
 }
+.recent li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.recent .bw-row {
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+.recent .bw-row b {
+  margin-left: auto;
+}
+.recent .bw-edit {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--blue);
+}
+.recent .bw-del {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  padding: 0;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  color: var(--muted);
+}
+.recent .bw-del .ico {
+  width: 18px;
+  height: 18px;
+}
 .recent b {
   font-family: var(--num);
   font-weight: 500;

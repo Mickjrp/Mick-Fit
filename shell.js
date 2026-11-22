@@ -1,6 +1,6 @@
 /* shell.js — Mick Fit: 5-tab navigation over the two apps, shared data, one Backup / Restore. */
 'use strict';
-const VERSION = '2.4.0';
+const VERSION = '2.5.0';
 
 /* ---------- storage keys (both apps share this origin's localStorage) ---------- */
 const MEAL_KEY = 'mick-mealprep-v1';               // meal app: { settings, over, preps, pantry, days, body }
@@ -27,13 +27,13 @@ const ICON = {
 };
 const TABS = [
   { k: 'today', label: 'วันนี้', segs: [{ k: 'train', label: 'ซ้อม', f: 'train', h: 'workout' }, { k: 'food', label: 'อาหาร', f: 'meal', h: 'today' }] },
-  { k: 'plan', label: 'แผน', segs: [{ k: 'train', label: 'ตารางซ้อม', f: 'train', h: 'week' }, { k: 'food', label: 'แผนอาหาร', f: 'meal', h: 'plan' }] },
+  { k: 'plan', label: 'แผน', segs: [{ k: 'train', label: 'ตารางซ้อม', f: 'train', h: 'week' }, { k: 'food', label: 'แผนอาหาร', f: 'meal', h: 'plan' }, { k: 'sum', label: 'สรุป', f: 'meal', h: 'summary' }] },
   { k: 'menu', label: 'เมนู', segs: [{ k: 'menu', f: 'meal', h: 'menu' }] },
   { k: 'stock', label: 'คลัง', segs: [{ k: 'stock', f: 'meal', h: 'stock' }] },
   { k: 'me', label: 'ฉัน', segs: [{ k: 'bw', label: 'น้ำหนัก', f: 'train', h: 'body' }, { k: 'tset', label: 'ตั้งค่าซ้อม', f: 'train', h: 'settings' }, { k: 'mset', label: 'ตั้งค่าอาหาร', f: 'meal', h: 'config' }, { k: 'data', label: 'ข้อมูล', f: 'data' }] }
 ];
 // meal app changes its own view sometimes (e.g. a "ไปที่คลัง" button): keep the tab bar in step
-const MEAL_HASH_TO_TAB = { today: ['today', 'food'], plan: ['plan', 'food'], prep: ['plan', 'food'], menu: ['menu', 'menu'], stock: ['stock', 'stock'], config: ['me', 'mset'] };
+const MEAL_HASH_TO_TAB = { today: ['today', 'food'], plan: ['plan', 'food'], prep: ['plan', 'food'], menu: ['menu', 'menu'], stock: ['stock', 'stock'], config: ['me', 'mset'], summary: ['plan', 'sum'] };
 
 const nav = Object.assign({ tab: 'today', seg: { today: 'train', plan: 'train', me: 'bw' } }, readJSON(NAV_KEY) || {});
 const tabOf = k => TABS.find(t => t.k === k) || TABS[0];

@@ -4,7 +4,7 @@
 /* ================= Body weight view ================= */
 function renderBody() {
   $("#v-body").innerHTML =
-    `<section class="block"><h2 class="blabel">บันทึกน้ำหนักตัว</h2><form class="card" id="bw-form" novalidate><div class="row2"><label class="fld num">วันที่<input type="date" id="bw-date" value="${todayISO()}"></label><label class="fld num">น้ำหนัก (kg)<input id="bw-kg" inputmode="decimal" autocomplete="off" placeholder="53.0"></label></div><button class="btn" type="submit" id="bw-save">บันทึก</button><p class="err" id="bw-err" hidden></p><p class="hint">ชั่งตอนเช้า 3–4 วัน/สัปดาห์ แล้วดูค่าเฉลี่ยรายสัปดาห์ · เว้นช่องว่างแล้วกดบันทึก = ลบค่าของวันนั้น</p></form></section><div class="view" id="bw-body"></div>`;
+    `<section class="block"><h2 class="blabel">บันทึกน้ำหนักตัว</h2><form class="card" id="bw-form" novalidate><div class="row2"><label class="fld num">วันที่<input type="date" id="bw-date" value="${todayISO()}"></label><label class="fld num">น้ำหนัก (kg)<input id="bw-kg" inputmode="decimal" autocomplete="off" placeholder="53.0"></label></div><button class="btn" type="submit" id="bw-save">บันทึก</button><p class="err" id="bw-err" hidden></p><p class="hint">ชั่งตอนเช้า 3–4 วัน/สัปดาห์ แล้วดูค่าเฉลี่ยรายสัปดาห์ · แก้วันเก่า: แตะรายการด้านล่าง หรือเลือกวันที่ด้านบน</p></form></section><div class="view" id="bw-body"></div>`;
   state.bwDirty = false;
   syncBwForm();
   renderBwBody();
@@ -23,7 +23,7 @@ function rateChip(r) {
   const t = (r > 0 ? "+" : "") + r.toFixed(2);
   if (r <= 0) return `<span class="chip bad">${t} ไม่ขึ้น</span>`;
   if (r < 0.15) return `<span class="chip warn">${t} ช้ากว่าเป้า</span>`;
-  if (r <= 0.25) return `<span class="chip good">${t} ตามเป้า</span>`;
+  if (r <= 0.5) return `<span class="chip good">${t} ตามเป้า</span>`;
   return `<span class="chip warn">${t} เร็วกว่าเป้า</span>`;
 }
 function renderBwBody() {
@@ -60,21 +60,37 @@ function renderBwBody() {
   else if (complete.length < 3)
     h +=
       '<p class="hint">กฎ “ไม่ขึ้น 2 สัปดาห์ → +100–150 kcal” จะเช็กให้อัตโนมัติเมื่อมีข้อมูลครบ 3 สัปดาห์</p>';
-  h += `<section class="block"><h2 class="blabel">รายสัปดาห์ · เป้า +0.15–0.25 kg</h2><div class="tablewrap"><table><thead><tr><th>สัปดาห์เริ่ม</th><th>เฉลี่ย</th><th>วัน</th><th>ต่อสัปดาห์</th></tr></thead><tbody>${wk
+  h += `<section class="block"><h2 class="blabel">รายสัปดาห์ · เป้า +0.15–0.5 kg</h2><div class="tablewrap"><table><thead><tr><th>สัปดาห์เริ่ม</th><th>เฉลี่ย</th><th>วัน</th><th>ต่อสัปดาห์</th></tr></thead><tbody>${wk
     .slice(0, 8)
     .map(
       (w) =>
         `<tr><td>${esc(thDate(w.s))}${w.s === cur ? " (นี้)" : ""}</td><td class="n">${w.avg.toFixed(2)}</td><td class="n">${w.n}</td><td>${rateChip(w.rate)}</td></tr>`,
     )
     .join("")}</tbody></table></div></section>`;
-  h += `<section class="block"><h2 class="blabel">บันทึกล่าสุด</h2><ul class="recent">${list
-    .slice(0, 12)
+  // every entry can be edited (tap the row → loads it into the form above) or deleted (×, with undo)
+  const shown = state.bwAll ? list : list.slice(0, 12);
+  h += `<section class="block"><h2 class="blabel">บันทึกทั้งหมด · ${list.length}</h2><ul class="recent">${shown
     .map(
       (v) =>
-        `<li><button type="button" data-bwdate="${esc(v.date)}"><span>${esc(thDay(v.date))}</span><b>${num(v.kg).toFixed(1)} kg</b></button></li>`,
+        `<li><button type="button" class="bw-row" data-bwdate="${esc(v.date)}" aria-label="แก้น้ำหนักวันที่ ${esc(thDay(v.date))}"><span>${esc(thDay(v.date))}</span><b>${num(v.kg).toFixed(1)} kg</b><i class="bw-edit">แก้</i></button><button type="button" class="bw-del" data-bwdel="${esc(v.date)}" aria-label="ลบน้ำหนักวันที่ ${esc(thDay(v.date))}">${I.x}</button></li>`,
     )
-    .join("")}</ul></section>`;
+    .join("")}</ul>${list.length > shown.length ? `<button type="button" class="btn ghost" data-act="bw-all">แสดงทั้งหมด (${list.length})</button>` : ""}</section>`;
   host.innerHTML = h;
+}
+function deleteBw(d) {
+  const old = bw[d];
+  if (!old) return;
+  delete bw[d];
+  lsSet(K.bw, bw);
+  state.bwDirty = false;
+  syncBwForm();
+  renderBwBody();
+  toast(`ลบ ${num(old.kg).toFixed(1)} kg วันที่ ${thDate(d)} แล้ว`, "เลิกทำ", () => {
+    bw[d] = old;
+    lsSet(K.bw, bw);
+    syncBwForm();
+    renderBwBody();
+  });
 }
 function saveBw() {
   const d = $("#bw-date").value,

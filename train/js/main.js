@@ -326,6 +326,10 @@ document.addEventListener("click", (e) => {
     } else adjustTimer(+ds.t);
     return;
   }
+  if (ds.bwdel) {
+    deleteBw(ds.bwdel);
+    return;
+  }
   if (ds.bwdate) {
     const d = $("#bw-date");
     d.value = ds.bwdate;
@@ -397,6 +401,10 @@ document.addEventListener("click", (e) => {
       if (c && c.ctx) removeItem(c.ctx.sk, c.ctx.i);
       break;
     }
+    case "bw-all":
+      state.bwAll = true;
+      renderBwBody();
+      break;
     case "export-json":
       exportJSON();
       break;

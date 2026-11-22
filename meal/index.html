@@ -237,6 +237,8 @@ ol.steps li::marker{color:var(--accent);font-family:var(--f-display);font-weight
 .sortbar{display:flex;align-items:center;gap:10px}
 .sortbar .seg{flex:1}
 .sortbar .seg button{font-size:12px;padding:6px}
+.sortsel{flex:1;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sortsel select{flex:1;min-width:0;min-height:36px;padding:6px 10px;font-size:14px}
 .ing li .nm{flex:1}
 .mk{width:20px;height:20px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 11px var(--f-display);border:1px solid var(--line);color:var(--muted);margin-top:2px}
 .mk.good{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,transparent)}
@@ -287,6 +289,9 @@ ol.steps li::marker{color:var(--accent);font-family:var(--f-display);font-weight
 details.done-list summary{cursor:pointer;list-style:none}
 .onboard{border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
 .onboard .pill{margin-left:6px}
+#to-top{position:fixed;right:16px;bottom:16px;z-index:40;width:48px;height:48px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 18px rgb(0 0 0 / .35)}
+#to-top svg{width:22px;height:22px}
+#to-top[hidden]{display:none}
 #toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:.25s;z-index:70;max-width:calc(100% - 32px)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 
@@ -328,6 +333,7 @@ svg.i{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke
     <div class="btn-row"><button class="btn" data-act="confirm-no">ยกเลิก</button><button class="btn danger" data-act="confirm-yes" id="confirm-yes">ลบ</button></div>
   </div>
 </div>
+<button id="to-top" data-act="to-top" hidden aria-label="กลับขึ้นบนสุด"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="viewer" hidden role="dialog" aria-modal="true" aria-label="หน้าต้นฉบับ"><button class="viewer-x" data-act="viewer-close" aria-label="ปิด">×</button><img id="viewer-img" alt=""></div>
 
@@ -727,6 +733,7 @@ function applyTargetsOnce() {
 }
 function applyAll(d) {
   S.settings = { ...clone(DEFAULT_SETTINGS), ...(d.settings || {}) };
+  if (S.settings.menuSort) UI.sort = S.settings.menuSort;
   S.over = d.over || {}; rebuildRecipes(); S.preps = d.preps || []; S.pantry = d.pantry || []; S.days = d.days || {}; S.body = d.body || { weights: [] };
   applyTheme();
 }
@@ -778,8 +785,11 @@ function applyTheme() {
 }
 
 /* ---------- render ---------- */
-const TABS = [['today', 'วันนี้'], ['plan', 'แผน'], ['menu', 'เมนู'], ['stock', 'คลัง'], ['config', 'ตั้งค่า']];
-function render() { renderTop(); renderTabs(); renderView(); }
+const TABS = [['today', 'วันนี้'], ['plan', 'แผน'], ['menu', 'เมนู'], ['stock', 'คลัง'], ['config', 'ตั้งค่า'], ['summary', 'สรุป']];
+function render() { renderTop(); renderTabs(); renderView(); syncToTop(); }
+// back-to-top button on the long menu list
+function syncToTop() { const b = $('#to-top'); if (b) b.hidden = !(UI.tab === 'menu' && window.scrollY > 500); }
+window.addEventListener('scroll', syncToTop, { passive: true });
 function renderTop() {
   const day = getDay(UI.sel), t = totals(day), target = targetsFor(UI.sel).kcal || 1;
   const pct = Math.min(100, t.kcal / target * 100);
@@ -797,7 +807,7 @@ function renderTabs() {
 function renderView() {
   const v = $('#view');
   if (!UI.loaded) { v.innerHTML = '<div class="skel"></div><div class="skel" style="height:220px"></div><div class="skel" style="height:180px"></div>'; return; }
-  v.innerHTML = ({ today: viewToday, plan: viewPlan, menu: viewMenu, stock: viewStock, config: viewConfig })[UI.tab]();
+  v.innerHTML = ({ today: viewToday, plan: viewPlan, menu: viewMenu, stock: viewStock, config: viewConfig, summary: viewSummary })[UI.tab]();
 }
 
 function mrow(label, val, target, color) {
@@ -899,9 +909,16 @@ function viewMenu() {
   <input class="search" type="search" id="search" data-input="search" placeholder="ค้นหาเมนูหรือวัตถุดิบ เช่น chicken, salmon" value="${esc(UI.q)}" aria-label="ค้นหาเมนู">
   <div class="chips" aria-label="Cookbook">${books.map(c => `<button class="chip book" data-act="book" data-book="${esc(c)}" aria-pressed="${UI.book === c}">${esc(c)}</button>`).join('')}</div>
   ${cats.length > 2 ? `<div class="chips" aria-label="หมวด">${cats.map(c => `<button class="chip" data-act="cat" data-cat="${esc(c)}" aria-pressed="${UI.cat === c}">${esc(c)}</button>`).join('')}</div>` : ''}
-  <div class="sortbar"><button class="btn sm ${filterCount() ? 'fav-on' : ''}" data-act="filter">ตัวกรอง${filterCount() ? ` (${filterCount()})` : ''}</button><div class="seg sm3" role="group" aria-label="เรียงลำดับ"><button data-act="sort" data-v="book" aria-pressed="${UI.sort !== 'cov'}">ตามเล่ม</button><button data-act="sort" data-v="cov" aria-pressed="${UI.sort === 'cov'}">ของในคลังครบสุด</button></div></div>
+  <div class="sortbar"><button class="btn sm ${filterCount() ? 'fav-on' : ''}" data-act="filter">ตัวกรอง${filterCount() ? ` (${filterCount()})` : ''}</button><label class="sortsel"><span>เรียง</span><select id="sort-by" aria-label="เรียงเมนูตาม">${SORT_OPTS.map(([v, l]) => `<option value="${v}" ${UI.sort === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label></div>
   <div class="list" id="recipe-list">${recipeList()}</div>`;
 }
+/* menu sort options; values per serving. 'book' keeps cookbook order, 'cov' = most ingredients in pantry */
+const SORT_OPTS = [['book', 'ตามเล่ม'], ['cov', 'ของในคลังครบสุด'], ['kcal-asc', 'kcal น้อย → มาก'], ['kcal-desc', 'kcal มาก → น้อย'], ['protein-desc', 'Protein มากสุด'], ['pdens', 'Protein ต่อ kcal สูงสุด'], ['carbs-desc', 'Carbs มากสุด'], ['carbs-asc', 'Carbs น้อยสุด'], ['fat-asc', 'Fat น้อยสุด'], ['time', 'ทำเสร็จเร็วสุด']];
+const SORT_KEY = {
+  'kcal-asc': r => num(r.kcal), 'kcal-desc': r => -num(r.kcal), 'protein-desc': r => -num(r.protein),
+  pdens: r => -(num(r.protein) / (num(r.kcal) || 1e9)), 'carbs-desc': r => -num(r.carbs), 'carbs-asc': r => num(r.carbs),
+  'fat-asc': r => num(r.fat), time: r => (num(r.prep) + num(r.cook)) || 1e9
+};
 const inBookFilter = r => UI.book === 'ทั้งหมด' || (UI.book === '★ สนใจ' ? isFav(r.id) : UI.book === 'สูตรของฉัน' ? !r.book : r.book === UI.book);
 function recipeList() {
   const q = UI.q.trim().toLowerCase();
@@ -910,6 +927,7 @@ function recipeList() {
   if (!list.length) return UI.book === '★ สนใจ' ? '<div class="empty">ยังไม่มีเมนูที่สนใจ เปิดเมนูแล้วกด ☆ สนใจ</div>' : '<div class="empty">ไม่พบเมนูที่ค้นหา</div>';
   const cvs = new Map(list.map(r => [r.id, coverage(r)]));
   if (UI.sort === 'cov') list = list.slice().sort((a, b) => { const x = cvs.get(a.id), y = cvs.get(b.id); return gap(x) - gap(y) || y.pct - x.pct; });
+  else if (SORT_KEY[UI.sort]) { const f = SORT_KEY[UI.sort]; list = list.slice().sort((a, b) => f(a) - f(b) || String(a.name).localeCompare(String(b.name))); }
   return list.map(r => { const im = imgSrc(r), cv = cvs.get(r.id); return `<button class="item has-img" data-act="open-recipe" data-id="${r.id}">
     ${im ? `<img class="thumb" src="${esc(im)}" alt="" loading="lazy" decoding="async">` : '<span class="thumb ph" aria-hidden="true"></span>'}
     <div style="min-width:0"><div class="t">${esc(r.name)}</div><div class="meta"><span class="mtag p">P ${fmt(r.protein)}g</span><span class="mtag c">C ${fmt(r.carbs)}g</span><span class="mtag f">F ${fmt(r.fat)}g</span></div><div class="meta">${covPill(cv)}${isFav(r.id) ? '<span class="star" aria-label="สนใจ">★</span>' : ''}<span>${esc(r.category || '')}</span></div></div>
@@ -963,6 +981,7 @@ function viewWeek() {
     <div class="stat"><b>${fmt(avgP)}g</b><span>protein/วัน</span></div>
   </section>
   ${avgK < avgT * 0.9 ? `<div class="banner" style="margin:0">แผนเฉลี่ยต่ำกว่าเป้าวันละ ${fmt(avgT - avgK)} kcal ลองเพิ่มมื้อ ของกินด่วน หรือเพิ่ม serving ในมื้อเริ่มต้นที่ตั้งค่า</div>` : ''}
+  ${tplCard(ws, label)}
   <section class="card">
     <div class="card-head"><h2>ของที่ต้องใช้ทั้งสัปดาห์</h2>${cv ? covPill(cv) : ''}</div>
     ${cv ? `<p class="hint" style="margin:0">รวมวัตถุดิบของทุกมื้อที่ยังไม่กิน ตั้งแต่วันนี้ถึงสิ้นสัปดาห์ (${[...uses.values()].reduce((a, b) => a + b, 0)} servings จาก ${uses.size} เมนู) ไม่นับมื้อที่กินจากกล่อง Prep</p>
@@ -978,6 +997,100 @@ function viewWeek() {
     <button class="btn ghost sm" data-act="add-entry" data-k="${k}">+ เพิ่มมื้อ</button>
   </section>`; }).join('')}
   <p class="hint">วันที่ยังไม่เคยเปิด แอปใช้มื้อเริ่มต้นจากตั้งค่าให้ แตะมื้อเพื่อเปลี่ยนเมนูหรือเลือกกินจากกล่อง Prep</p>`;
+}
+/* ---------- weekly summary (แผน › สรุป): food + water from this app, weight / workouts / runs from
+   the training screens' storage (gtl.*). Week = Mon–Sun. ---------- */
+const SESS_KEY = 'gtl.sessions.v1';
+function readLS(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+function trainWeek(ws) {
+  const prog = readLS(PROG_KEY), sess = readLS(SESS_KEY) || {}, end = addDays(ws, 6);
+  const ex = (prog && prog.ex) || {}, out = { planDays: 0, planRuns: 0, days: 0, sets: 0, runs: 0, runMin: 0, hr: [] };
+  if (prog && prog.days) DOW.forEach(d => { const day = prog.days[d]; if (!day || day.rest) return; out.planDays++; if (Object.values(day.sections || {}).some(l => (l || []).some(x => ex[x.ex] && ex[x.ex].type === 'cardio'))) out.planRuns++; });
+  Object.values(sess).forEach(s => {
+    if (!s || !s.date || s.date < ws || s.date > end) return;
+    let any = false;
+    Object.entries(s.entries || {}).forEach(([id, e]) => {
+      const t = (ex[id] || {}).type;
+      if (t === 'cardio') { if (e && (e.done || e.min != null && e.min !== '')) { any = true; out.runs++; out.runMin += num(e.min); if (num(e.hr)) out.hr.push(num(e.hr)); } return; }
+      if (t === 'check') { if (e && e.done) any = true; return; }
+      const n = ((e && e.sets) || []).filter(x => x && (x.done || (x.reps != null && x.reps !== '') || (x.sec != null && x.sec !== ''))).length;
+      if (n) { any = true; out.sets += n; }
+    });
+    if (any) out.days++;
+  });
+  return out;
+}
+function viewSummary() {
+  const today = todayKey(), ws = UI.sumWeek || weekStart(today), end = addDays(ws, 6), cur = ws === weekStart(today);
+  const days = [0, 1, 2, 3, 4, 5, 6].map(o => addDays(ws, o)).filter(k => k <= today);
+  const label = `${kdate(ws).getDate()} ${thDate(ws, { month: 'short' })} – ${thDate(end, { day: 'numeric', month: 'short' })}`;
+  const nav = `<section class="daynav">
+    <button class="icon-btn" data-act="sum-shift" data-n="-7" aria-label="สัปดาห์ก่อน">‹</button>
+    <div style="text-align:center"><h1 style="font-size:20px">สรุป ${esc(label)}</h1><div class="sub">${cur ? 'สัปดาห์นี้' : '<button class="pill" data-act="sum-shift" data-n="0">กลับสัปดาห์นี้</button>'}</div></div>
+    <button class="icon-btn" data-act="sum-shift" data-n="7" aria-label="สัปดาห์ถัดไป" ${cur ? 'disabled' : ''}>›</button></section>`;
+  if (!days.length) return nav + '<div class="empty">สัปดาห์นี้ยังไม่เริ่ม</div>';
+  // food: only days with at least one meal ticked as eaten
+  const logged = days.map(k => ({ k, d: S.days[k], tg: targetsFor(k) })).filter(x => x.d && x.d.entries.some(e => e.done)).map(x => ({ ...x, t: totals(x.d) }));
+  const avg = (a, f) => a.length ? a.reduce((s, x) => s + f(x), 0) / a.length : null;
+  const aK = avg(logged, x => x.t.kcal), aP = avg(logged, x => x.t.protein), aT = avg(logged, x => x.tg.kcal), aPT = avg(logged, x => x.tg.protein);
+  const hitK = logged.filter(x => x.t.kcal >= x.tg.kcal * 0.9).length, hitP = logged.filter(x => x.t.protein >= x.tg.protein * 0.9).length;
+  // water: every day so far this week
+  const wt = num(S.settings.water) || 1, ws_ = days.map(k => num((S.days[k] || {}).water)), aW = ws_.reduce((a, b) => a + b, 0) / days.length, hitW = ws_.filter(v => v >= wt).length;
+  // weight: this week's average vs last week's
+  const w = bwList(), wAvg = (a, b) => { const xs = w.filter(x => x.date >= a && x.date <= b).map(x => num(x.kg)); return xs.length ? { v: xs.reduce((p, q) => p + q, 0) / xs.length, n: xs.length } : null; };
+  const wNow = wAvg(ws, end), wPrev = wAvg(addDays(ws, -7), addDays(ws, -1)), dW = wNow && wPrev ? wNow.v - wPrev.v : null; // healthy range +0.15–0.5 kg/week, same as the Body page
+  const tr = trainWeek(ws), hrAvg = tr.hr.length ? Math.round(tr.hr.reduce((a, b) => a + b, 0) / tr.hr.length) : null;
+  const stat = (v, l, cls = '') => `<div class="stat ${cls}"><b>${v}</b><span>${l}</span></div>`;
+  const wNote = dW == null ? (wNow ? 'ยังไม่มีค่าของสัปดาห์ก่อนให้เทียบ' : 'ยังไม่ได้ชั่งสัปดาห์นี้') : dW < 0.15 ? 'ขึ้นช้ากว่าเป้า (+0.15–0.5 kg/สัปดาห์) ถ้าเป็นแบบนี้ 2 สัปดาห์ติด ลองเพิ่มแคล' : dW > 0.5 ? 'ขึ้นเร็วกว่าเป้า (+0.15–0.5 kg/สัปดาห์) อาจเป็นไขมันมากไป ลองลดแคลลงนิดหน่อย' : 'อยู่ในเป้า +0.15–0.5 kg/สัปดาห์ ดีแล้ว';
+  return nav + `
+  <section class="card"><div class="card-head"><h2>น้ำหนัก</h2>${dW != null ? `<span class="pill ${dW >= 0.15 && dW <= 0.5 ? 'good' : 'warn'}">${dW >= 0 ? '+' : ''}${dW.toFixed(2)} kg</span>` : ''}</div>
+    <div class="stat-grid">${stat(wNow ? wNow.v.toFixed(1) + ' kg' : '—', 'เฉลี่ยสัปดาห์นี้')}${stat(wPrev ? wPrev.v.toFixed(1) + ' kg' : '—', 'เฉลี่ยสัปดาห์ก่อน')}${stat(wNow ? wNow.n + ' ครั้ง' : '0 ครั้ง', 'ชั่งน้ำหนัก')}</div>
+    <p class="hint" style="margin:0">${wNote}</p></section>
+  <section class="card"><div class="card-head"><h2>อาหาร</h2><span class="pill">จด ${logged.length}/${days.length} วัน</span></div>
+    ${logged.length ? `<div class="stat-grid">${stat(fmt(aK), `kcal/วัน · เป้า ${fmt(aT)}`)}${stat(fmt(aP) + 'g', `protein/วัน · เป้า ${fmt(aPT)}g`)}${stat(`${hitK}/${logged.length}`, 'วันที่แคลถึงเป้า')}</div>
+    <p class="hint" style="margin:0">protein ถึงเป้า ${hitP}/${logged.length} วัน · นับเฉพาะมื้อที่ติ๊กว่ากินแล้ว · ถึงเป้า = 90% ขึ้นไป</p>` : '<p class="hint" style="margin:0">ยังไม่มีมื้อที่ติ๊กว่ากินแล้วในสัปดาห์นี้</p>'}</section>
+  <section class="card"><div class="card-head"><h2>น้ำดื่ม</h2></div>
+    <div class="stat-grid">${stat(fmt(aW) + ' ml', `เฉลี่ย/วัน · เป้า ${fmt(wt)}`)}${stat(`${hitW}/${days.length}`, 'วันที่ครบเป้า')}</div></section>
+  <section class="card"><div class="card-head"><h2>ซ้อม</h2><span class="pill ${tr.planDays && tr.days >= Math.min(tr.planDays, days.length) ? 'good' : ''}">${tr.days}/${tr.planDays || '—'} วัน</span></div>
+    <div class="stat-grid">${stat(tr.days + ' วัน', 'ที่จดการซ้อม')}${stat(fmt(tr.sets), 'sets ที่ทำ')}${stat(`${tr.runs}/${tr.planRuns || '—'}`, 'Zone 2 run')}</div>
+    <p class="hint" style="margin:0">${tr.runs ? `วิ่งรวม ${fmt(tr.runMin)} นาที${hrAvg ? ` · HR เฉลี่ย ${hrAvg}` : ''}` : 'ยังไม่ได้จดการวิ่งสัปดาห์นี้'}</p></section>`;
+}
+/* ---------- meal plan templates: save a 7-day plan, apply it to any week ----------
+   Stored in settings.mealTemplates = [{ id, name, savedAt, days: [[entry, ...] × 7 (Mon–Sun)] }].
+   Applying replaces meals not yet eaten from today on; eaten meals and past days stay. */
+const mealTpls = () => S.settings.mealTemplates || [];
+function tplCard(ws, label) {
+  const ts = mealTpls();
+  return `<section class="card"><div class="card-head"><h2>เทมเพลตแผนอาหาร</h2><button class="btn sm" data-act="mtpl-save" data-ws="${ws}">+ บันทึกสัปดาห์นี้</button></div>
+    ${ts.length ? `<div>${ts.map(t => { const n = t.days.reduce((a, d) => a + d.filter(e => e.recipeId || e.name).length, 0), k = t.days.reduce((a, d) => a + d.reduce((b, e) => b + macrosOf(e).kcal, 0), 0) / 7;
+      return `<div class="stock-row"><button class="nm" data-act="mtpl-apply" data-id="${t.id}" data-ws="${ws}"><b>${esc(t.name)}</b> <span class="muted sm">${n} มื้อ · ~${fmt(k)} kcal/วัน</span></button><button class="icon-btn" data-act="mtpl-del" data-id="${t.id}" aria-label="ลบเทมเพลต ${esc(t.name)}">×</button></div>`; }).join('')}</div>
+    <p class="hint" style="margin:0">แตะชื่อเพื่อใช้กับสัปดาห์ ${esc(label)} · แทนที่มื้อที่ยังไม่ได้กินตั้งแต่วันนี้ มื้อที่กินแล้วไม่เปลี่ยน</p>`
+    : '<p class="hint" style="margin:0">วางแผนสัปดาห์ที่ชอบแล้วกด “บันทึกสัปดาห์นี้” ไว้ใช้ซ้ำสัปดาห์อื่นได้</p>'}</section>`;
+}
+const tplEntry = e => ({ slot: e.slot || '', recipeId: e.recipeId || '', servings: e.servings || 1, name: e.name || '', kcal: e.kcal || 0, protein: e.protein || 0, carbs: e.carbs || 0, fat: e.fat || 0 });
+function saveMealTemplate(ws) {
+  openSheet({ title: 'บันทึกเป็นเทมเพลต', draft: { name: '' }, render: d => `<div class="form">${field('ชื่อเทมเพลต', 'name', d.name, 'text', 'เช่น Bulk สัปดาห์ปกติ')}
+      <p class="hint" style="margin:0">เก็บทุกมื้อของ 7 วันในสัปดาห์นี้ (จันทร์–อาทิตย์) ถ้าชื่อซ้ำกับเทมเพลตเดิม จะบันทึกทับ</p></div>`,
+    footer: () => '<button class="btn" data-act="sheet-close">ยกเลิก</button><button class="btn primary" data-act="sheet-save">บันทึก</button>',
+    onSave: d => {
+      const name = String(d.name || '').trim();
+      if (!name) { toast('ตั้งชื่อเทมเพลตก่อน'); return false; }
+      const days = [0, 1, 2, 3, 4, 5, 6].map(o => getDay(addDays(ws, o)).entries.map(tplEntry));
+      const ts = mealTpls().filter(t => t.name !== name);
+      ts.push({ id: uid(), name, savedAt: todayKey(), days });
+      S.settings.mealTemplates = ts; save('settings'); render(); toast(`บันทึกเทมเพลต “${name}” แล้ว`);
+    } });
+}
+function applyMealTemplate(id, ws) {
+  const t = mealTpls().find(x => x.id === id); if (!t) return;
+  const today = todayKey(); let n = 0;
+  t.days.forEach((list, i) => {
+    const k = addDays(ws, i); if (k < today) return;
+    const d = ensureDay(k);
+    d.entries = d.entries.filter(e => e.done).concat(list.map(e => ({ ...tplEntry(e), id: uid(), done: false })));
+    save('day:' + k); n++;
+  });
+  render(); toast(n ? `ใช้ “${t.name}” กับ ${n} วันแล้ว` : 'สัปดาห์นี้ผ่านไปแล้ว เลือกสัปดาห์ถัดไปก่อน');
 }
 function viewPrep() {
   const active = S.preps.filter(p => !p.cookedOn), fridge = S.preps.filter(p => p.cookedOn && num(p.boxesLeft) > 0), done = S.preps.filter(p => p.cookedOn && !(num(p.boxesLeft) > 0));
@@ -1430,6 +1543,11 @@ const A = {
   'edit-entry': el => editEntry(el.dataset.id, el.dataset.k || UI.sel),
   'add-entry': el => editEntry(null, (el && el.dataset && el.dataset.k) || UI.sel),
   'plan-seg': el => { UI.planSeg = el.dataset.v; render(); },
+  'sum-shift': el => { const n = +el.dataset.n, now = weekStart(todayKey()); UI.sumWeek = n ? addDays(UI.sumWeek || now, n) : now; if (UI.sumWeek > now) UI.sumWeek = now; render(); },
+  'to-top': () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+  'mtpl-save': el => saveMealTemplate(el.dataset.ws),
+  'mtpl-apply': el => { const t = mealTpls().find(x => x.id === el.dataset.id), ws = el.dataset.ws; if (t) ask(`ใช้ “${t.name}” กับสัปดาห์นี้? มื้อที่ยังไม่ได้กินตั้งแต่วันนี้จะถูกแทนที่`, () => applyMealTemplate(t.id, ws), 'ใช้เทมเพลต'); },
+  'mtpl-del': el => { const t = mealTpls().find(x => x.id === el.dataset.id); if (t) ask(`ลบเทมเพลต “${t.name}”? แผนที่ใช้ไปแล้วไม่หาย`, () => { S.settings.mealTemplates = mealTpls().filter(x => x.id !== t.id); save('settings'); render(); toast('ลบเทมเพลตแล้ว'); }); },
   'week-shift': el => { const n = +el.dataset.n; UI.week = n ? addDays(UI.week || weekStart(UI.sel), n) : weekStart(todayKey()); render(); },
   'week-shop': () => { const { list } = weekIngredients(UI.week || weekStart(UI.sel)); const n = addMissingToShop({}, 1, list); toast(n ? `เพิ่ม ${n} อย่างลงรายการซื้อ` : 'ของที่ขาดอยู่ในรายการซื้อแล้ว'); render(); },
   'go-day': el => { UI.sel = el.dataset.k; UI.tab = 'today'; location.hash = 'today'; window.scrollTo(0, 0); render(); },
@@ -1534,6 +1652,7 @@ document.addEventListener('input', e => {
   if (t.dataset.input === 'search') { UI.q = t.value; $('#recipe-list').innerHTML = recipeList(); }
 });
 document.addEventListener('change', e => {
+  if (e.target.id === 'sort-by') { UI.sort = e.target.value; S.settings.menuSort = UI.sort; save('settings'); $('#recipe-list').innerHTML = recipeList(); return; }
   if (e.target.id === 'img-file' && e.target.files[0]) { uploadRecipeImage(e.target.files[0]); return; }
   if (e.target.id === 'import-file' && e.target.files[0]) { const r = new FileReader(); r.onload = () => { $('#import-box').value = r.result; }; r.readAsText(e.target.files[0]); }
 });
@@ -1543,7 +1662,7 @@ window.addEventListener('hashchange', () => { fromHash(); if (!sheet) render(); 
 // Training screens change the program (train/rest days) and body weight; "storage" fires here when they do.
 window.addEventListener('storage', e => {
   if (e.key === PROG_KEY) progRest = undefined;
-  if ((e.key === PROG_KEY || e.key === BW_KEY) && UI.loaded && !sheet) render();
+  if ((e.key === PROG_KEY || e.key === BW_KEY || (e.key === SESS_KEY && UI.tab === 'summary')) && UI.loaded && !sheet) render();
 });
 fromHash();
 boot();

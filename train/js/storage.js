@@ -197,6 +197,7 @@ const state = {
   weekSel: null,
   extra: {},
   bwDirty: false,
+  bwAll: false, // body page: show every weight entry, not just the latest 12
   toasted: {},
 };
 const curKey = () => `${state.date}_${state.day}`;
